@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles del Producto </title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos</title>
+</head>
+<body>
+        <h1>Lista de Productos en Tiempo Real</h1>
+    <ul id="product-list">
+        {{#each productos1}}
+        <li>
+                <h2>{{this.title}} ({{this.code}})</h2>
+                <p>{{this.description}}</p>
+                <p>Precio: ${{this.price}}</p>
+                <p>Stock: {{this.stock}}</p>
+                <img src="{{this.img}}" alt="{{this.title}}" style="width:100px;height:auto;"/>
+                <p>category: {{this.category}}</p>
+                <p>available: {{this.available}}</p>
+            </li>
+        {{/each}}
+    </ul>
+
+<div id="contenedorProductos"></div>
+<h2> Formulario para agregar productos </h2>
+
+<form id="enviar-producto">
+    <input type="text" id="title" placeholder="Titulo">
+    <input type="text" id="description" placeholder="Descripción">
+    <input type="number" id="price" placeholder="Precio">
+    <input type="text" id="img" value="Sin imagen">
+    <input type="text" id="code" placeholder="Código">
+    <input type="number" id="stock" placeholder="Stock">
+    <input type="text" id="category" placeholder="Categoria">
+    <select id="status">
+        <option value="true"> Activo </option>
+        <option value="false"> Inactivo </option>
+    </select>
+    <button type="button" id="btnEnviar"> Enviar </button>
+</form>
+
+<script type="module" src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+<script type="module"src="../public/js/index.js"></script>    
+
+    <div class="paginacion">
+    {{#if hasPrevPage}}
+        <a href="/realtimeproducts?page={{prevPage}}">Anterior</a>
+    {{/if}}
+
+    {{#if hasNextPage}}
+        <a href="/realtimeproducts?page={{nextPage}}">Siguiente</a>
+    {{/if}}
+
+    <p>Página {{currentPage}} de {{totalPages}}</p>
+</div>
+<script type="module" src="/socket.io/socket.io.js"></script>
+</body>
+</html>
+o</title>
+</head>
+<body>
+    <h1>{{product.title}}</h1>
+    <img src="{{this.img}}" alt="{{this.title}}"style="width:100px;height:auto;"/>
+    <p>{{product.description}}</p>
+    <p>Precio: ${{product.price}}</p>
+    <p>Categoría: {{product.category}}</p>
+
+    <!-- Botón para agregar al carrito -->
+    <form action="/carts/{{cartId}}/products/{{product._id}}" method="POST">
+        <button type="submit">Agregar al carrito</button>
+    </form>
+
+    <a href="/products?page=1&limit=10">Volver a la lista de productos</a>
+</body>
+</html>
