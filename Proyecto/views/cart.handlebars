@@ -1,0 +1,30 @@
+<main class="d-flex flex-column align-items-center w-100 flex-grow-1">
+  <h1 class="bg-success-subtle p-2 text-center text-success w-100">CART</h1>
+  <table class="m-3 table table-striped" style="width: 380px;">
+    <thead>
+      <tr class="table-success">
+        <th class="p-1" scope="col">Quantity</th>
+        <th class="p-1" scope="col">Title</th>
+        <th class="p-1" scope="col">Price</th>
+        <th class="p-1" scope="col"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each carts}}
+      <tr>
+        <td class="p-1">{{this.quantity}}</td>
+        <td class="p-1">{{this.product_id.title}}</td>
+        <td class="p-1">{{this.product_id.price}}</td>
+        <td class="p-1">
+          <svg class="remove-from-cart" data-id={{this._id}} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M6 7H5v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7H6zm10.618-3L15 2H9L7.382 4H3v2h18V4z"></path></svg>
+        </td>
+      </tr>
+      {{/each}}
+      <tr class="table-success">
+        <th class="p-1 pt-3" colspan="2">Total to pay</th>
+        <th class="p-1 pt-3" colspan="2">{{this.total}}</th>
+      </tr>
+    </tbody>
+  </table>
+</main>
+<script src="/scripts/cart.js"></script>

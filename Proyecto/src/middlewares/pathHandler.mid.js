@@ -1,10 +1,11 @@
-const pathHandler = (req, res, next) => {
-    const message = "Not found path";
-    return res.status(404).json({
-      method: req.method,
-      url: req.originalUrl,
-      error: message,
-    });
+const pathHandler = (req, res) => {
+  const message = "Not found path";
+  const data = {
+    method: req.method,
+    url: req.originalUrl,
+    error: message,
   };
-  
-  export default pathHandler;
+  return res.status(404).json(data);
+};
+
+export default pathHandler;

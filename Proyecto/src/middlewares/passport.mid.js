@@ -1,27 +1,40 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Strategy as GoogleStrategy } from "passport-google-oauth2";
-import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
-import User from "../data/models/users.model.js";
-import { compareHash, createHash } from "../utils/hash.util.js";
-import { createToken } from "../utils/token.util.js";
+import { usersManager } from "../data/mongo/manager.mongo.js";
+import { createHash, verifyHash } from "../helpers/hash.helper.js";
 
 passport.use(
   "register",
   new LocalStrategy(
-    {
-      passReqToCallback: true,
-      usernameField: "email" /* , passwordField: "contrasenia" */,
-    },
+    /* objeto de configuración de la estrategia */
+    { passReqToCallback: true, usernameField: "email" },
+    /* callback de la estrategia (lógica de autenticación/autorizacion) */
     async (req, email, password, done) => {
       try {
-        const one = await User.findOne({ email });
-        if (one) {
-          return done(null, null, { message: "Invalid credentials", statusCode: 401 });
+        /* la lógica del register está actualmente en la ruta del register */
+        /* para mayor ordenamiento de la autenticación */
+        /* esa lógica se viene para la estrategia */
+        const data = req.body;
+        /* validar propiedades obligatorias */
+        if (!data.city) {
+          const error = new Error("Invalid data");
+          error.statusCode = 400;
+          throw error;
         }
-        req.body.password = createHash(password);
-        const user = await User.create(req.body);
-        done(null, user);
+        /* validar el no re-registro del usuario */
+        const user = await usersManager.readBy({ email });
+        if (user) {
+          const error = new Error("Invalid credentials");
+          error.statusCode = 401;
+          throw error;
+        }
+        /* proteger la contraseña */
+        data.password = createHash(password);
+        /* crear al usuario */
+        const response = await usersManager.createOne(data);
+        /* el segundo parametro del done agrega al objeto de requerimientos */
+        /* una propiedad user con los datos del usuario */
+        done(null, response);
       } catch (error) {
         done(error);
       }
@@ -31,105 +44,35 @@ passport.use(
 passport.use(
   "login",
   new LocalStrategy(
+    /* objeto de configuración de la estrategia */
     { passReqToCallback: true, usernameField: "email" },
+    /* callback de la estrategia (lógica de autenticación/autorizacion) */
     async (req, email, password, done) => {
       try {
-        const user = await User.findOne({ email });
-        if (!user) {
-          return done(null, null, { message: "Invalid credentials", statusCode: 401 });
+        /* la lógica del login está actualmente en la ruta del register */
+        /* para mayor ordenamiento de la autenticación */
+        /* esa lógica se viene para la estrategia */
+        /* validar si el usuario existe en la base de datos */
+        const response = await usersManager.readBy({ email });
+        if (!response) {
+          const error = new Error("Invalid credentials");
+          error.statusCode = 401;
+          throw error;
         }
-        const verifyPassword = compareHash(password, user.password);
-        if (!verifyPassword) {
-          return done(null, null, { message: "Invalid credentials", statusCode: 401 });
+        /* validar la contraseña */
+        const verify = verifyHash(password, response.password);
+        if (!verify) {
+          const error = new Error("Invalid credentials");
+          error.statusCode = 401;
+          throw error;
         }
-        const token = createToken({
-          email: user.email,
-          role: user.role,
-          user_id: user._id,
-        });
-        req.token = token;
-        done(null, user);
-      } catch (error) {
-        done(error);
-      }
-    }
-  )
-  /* la configuración de la estrategia depende de QUE QUIERO HACER */
-  /* en este caso quiero INICIAR SESION */
-);
-passport.use(
-  "google",
-  new GoogleStrategy(
-    /* objeto de configuración de la estrategia */
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_SECRET,
-      callbackURL: "http://localhost:8080/api/auth/google/callback",
-      passReqToCallback: true,
-    },
-    /* callback done con la logica necesaria para la estrategia */
-    async (req, accesToken, refreshToken, profile, done) => {
-      try {
-        let user = await User.findOne({ email: profile.id });
-        if (!user) {
-          user = {
-            email: profile.id,
-            name: profile.name.givenName,
-            avatar: profile.photos[0].value,
-            password: createHash(profile.id),
-          };
-          user = await User.create(user);
-        }
-        const token = createToken({
-          email: user.email,
-          role: user.role,
-          user_id: user._id,
-        });
-        req.token = token;
-        done(null, user);
-      } catch (error) {
-        done(error);
-      }
-    }
-  )
-);
-passport.use(
-  "jwt-auth",
-  new JwtStrategy(
-    {
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.JWT_KEY,
-    },
-    async (data, done) => {
-      try {
-        const { user_id } = data;
-        const user = await User.findById(user_id);
-        if (!user) {
-          return done()
-        }
-        done(null, user);
-      } catch (error) {
-        done(error);
-      }
-    }
-  )
-);
-passport.use(
-  "jwt-adm",
-  new JwtStrategy(
-    {
-      //jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      jwtFromRequest: ExtractJwt.fromExtractors([(req) => req?.cookies?.token]),
-      secretOrKey: process.env.JWT_KEY,
-    },
-    async (data, done) => {
-      try {
-        const { user_id, role } = data;
-        const user = await User.findById(user_id);
-        if (user.role !== "ADMIN") {
-          return done(null)
-        }
-        done(null, user);
+        /* lo dejamos provisionalmente porque NO VAMOS A MANEJAR SESIONES CON PASSPORT */
+        req.session.user_id = response._id;
+        req.session.email = email;
+        req.session.role = response.role;
+        /* el segundo parametro del done agrega al objeto de requerimientos */
+        /* una propiedad user con los datos del usuario */
+        done(null, response);
       } catch (error) {
         done(error);
       }

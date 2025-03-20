@@ -1,8 +1,8 @@
 import CustomRouter from "../utils/CustomRouter.util.js";
 import productsRouter from "./products.router.js";
 import usersRouter from "./users.router.js";
-import cookiesRouter from "./cookies.router.js";
-import sessionsRouter from "./sessions.router.js";
+import cookiesRouter from "./api/cookies.router.js";
+import sessionsRouter from "./api/sessions.router.js";
 import authRouter from "./auth.router.js";
 import processRouter from "./process.router.js";
 
